@@ -40,7 +40,7 @@ cp css/* /var/www/dcims/css/
 cp includes/* /var/www/dcims/includes/
 
 # Execute database schema
-mysql ${DB_NAME} < schema.sql
+mysql ${DB_NAME} < install/schema.sql
 
 # Configure Apache virtual host
 cat > /etc/apache2/sites-available/dcims.conf << EOF
