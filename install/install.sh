@@ -31,15 +31,16 @@ mysql -e "FLUSH PRIVILEGES;"
 
 # Create application directory structure
 mkdir -p /var/www/dcims
-mkdir -p /var/www/dcims/install
-mkdir -p /var/www/dcims/includes
 mkdir -p /var/www/dcims/css
+mkdir -p /var/www/dcims/includes
 
-# Copy installation files
-cp schema.sql /var/www/dcims/install/
+# Copy source files to web directory
+cp *.php /var/www/dcims/
+cp css/* /var/www/dcims/css/
+cp includes/* /var/www/dcims/includes/
 
 # Execute database schema
-mysql ${DB_NAME} < /var/www/dcims/install/schema.sql
+mysql ${DB_NAME} < schema.sql
 
 # Configure Apache virtual host
 cat > /etc/apache2/sites-available/dcims.conf << EOF
@@ -58,21 +59,10 @@ cat > /etc/apache2/sites-available/dcims.conf << EOF
 </VirtualHost>
 EOF
 
-# Enable the site
+# Enable the site and disable default
 a2ensite dcims.conf
+a2dissite 000-default.conf
 systemctl restart apache2
-
-# Create config file
-cat > /var/www/dcims/config.php << EOF
-<?php
-define('DB_HOST', 'localhost');
-define('DB_NAME', '${DB_NAME}');
-define('DB_USER', '${DB_USER}');
-define('DB_PASS', '${DB_PASS}');
-define('SITE_URL', 'http://inventory.local');
-define('SITE_NAME', 'Data Center Inventory Management System');
-define('SITE_SHORT_NAME', 'DCIMS');
-EOF
 
 # Set proper permissions
 chown -R www-data:www-data /var/www/dcims
@@ -83,3 +73,12 @@ echo "Database Name: ${DB_NAME}"
 echo "Database User: ${DB_USER}"
 echo "Database Password: ${DB_PASS}"
 echo "Please update your hosts file or DNS settings to point inventory.local to your server"
+
+# Save database credentials
+echo "Saving database credentials to /root/dcims_credentials.txt"
+cat > /root/dcims_credentials.txt << EOF
+Database Name: ${DB_NAME}
+Database User: ${DB_USER}
+Database Password: ${DB_PASS}
+EOF
+chmod 600 /root/dcims_credentials.txt

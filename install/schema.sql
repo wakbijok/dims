@@ -33,7 +33,7 @@ CREATE TABLE environments (
     description TEXT
 );
 
--- Create assets table (replaces servers table)
+-- Create assets table
 CREATE TABLE assets (
     id INT PRIMARY KEY AUTO_INCREMENT,
     project_id INT,
@@ -78,7 +78,7 @@ CREATE TABLE asset_history (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (username, password, is_admin) 
-VALUES ('admin', '$2y$10$8WGtV9qZoZ7qZ9J9Z9J9ZOqZ9J9Z9J9Z9J9Z9J9Z9J9Z9J9Z9', TRUE);
+VALUES ('admin', '$2y$10$dxeDWcqpvydxz0qCw5YZm.AkbzFGW8.PFcD8RnbzRXhGc7hRHHcFO', TRUE);
 
 -- Insert default environments
 INSERT INTO environments (name, description) VALUES 
@@ -87,7 +87,7 @@ INSERT INTO environments (name, description) VALUES
 ('Development', 'Development Environment'),
 ('Testing', 'Testing Environment');
 
--- Insert sample location types
+-- Insert sample locations
 INSERT INTO locations (name, type) VALUES 
 ('Main DC', 'Primary'),
 ('DR Site', 'Disaster Recovery'),

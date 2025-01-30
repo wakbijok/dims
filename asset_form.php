@@ -1,4 +1,5 @@
 <?php
+define('BASE_PATH', __DIR__);
 require_once 'config.php';
 require_once 'functions.php';
 check_login();
@@ -8,37 +9,23 @@ $asset = null;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 // Get dropdown options
-$projects = $conn->query("SELECT * FROM projects ORDER BY name");
-$locations = $conn->query("SELECT * FROM locations ORDER BY name");
-$environments = $conn->query("SELECT * FROM environments ORDER BY name");
+$projects = get_projects();
+$locations = get_locations();
+$environments = get_environments();
 
-// Define asset types
-$asset_types = [
-    'Server' => 'Physical or Virtual Server',
-    'Storage' => 'Storage System',
-    'Network' => 'Network Equipment',
-    'Security' => 'Security Appliance',
-    'Application' => 'Application Service',
-    'Database' => 'Database System',
-    'Other' => 'Other Equipment'
-];
-
-// Define status options
-$status_options = [
-    'Active' => 'Currently in use',
-    'Inactive' => 'Not in use',
-    'Maintenance' => 'Under maintenance',
-    'Retired' => 'No longer in service',
-    'Reserved' => 'Reserved for future use'
-];
-
+// If editing existing asset, get its data
 if ($id) {
     $stmt = $conn->prepare("SELECT * FROM assets WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $asset = $stmt->get_result()->fetch_assoc();
+    if (!$asset) {
+        header("Location: index.php?error=" . urlencode("Asset not found"));
+        exit();
+    }
 }
 
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $data = [
         'project_id' => $_POST['project_id'],
@@ -50,70 +37,68 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'url' => $_POST['url'],
         'ip_address' => $_POST['ip_address'],
         'protocol' => $_POST['protocol'],
-        'port' => $_POST['port'],
+        'port' => $_POST['port'] ? $_POST['port'] : null,
         'username' => $_POST['username'],
         'password' => $_POST['password'],
         'alternate_ip' => $_POST['alternate_ip'],
-        'alternate_port' => $_POST['alternate_port'],
+        'alternate_port' => $_POST['alternate_port'] ? $_POST['alternate_port'] : null,
         'specifications' => $_POST['specifications'],
         'remarks' => $_POST['remarks'],
         'status' => $_POST['status']
     ];
 
-    if ($id) {
-        // Update existing asset
-        $sql = "UPDATE assets SET 
-                project_id=?, location_id=?, environment_id=?, asset_type=?,
-                name=?, description=?, url=?, ip_address=?, protocol=?,
-                port=?, username=?, password=?, alternate_ip=?, alternate_port=?,
-                specifications=?, remarks=?, status=?, updated_by=?
-                WHERE id=?";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iiissssssisssisssii",
-            $data['project_id'], $data['location_id'], $data['environment_id'],
-            $data['asset_type'], $data['name'], $data['description'], $data['url'],
-            $data['ip_address'], $data['protocol'], $data['port'], $data['username'],
-            $data['password'], $data['alternate_ip'], $data['alternate_port'],
-            $data['specifications'], $data['remarks'], $data['status'],
-            $_SESSION['user_id'], $id
-        );
-    } else {
-        // Create new asset
-        $sql = "INSERT INTO assets (
-                project_id, location_id, environment_id, asset_type,
-                name, description, url, ip_address, protocol,
-                port, username, password, alternate_ip, alternate_port,
-                specifications, remarks, status, created_by, updated_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iiissssssisssisssii",
-            $data['project_id'], $data['location_id'], $data['environment_id'],
-            $data['asset_type'], $data['name'], $data['description'], $data['url'],
-            $data['ip_address'], $data['protocol'], $data['port'], $data['username'],
-            $data['password'], $data['alternate_ip'], $data['alternate_port'],
-            $data['specifications'], $data['remarks'], $data['status'],
-            $_SESSION['user_id'], $_SESSION['user_id']
-        );
-    }
+    try {
+        if ($id) {
+            // Update existing asset
+            $sql = "UPDATE assets SET 
+                    project_id=?, location_id=?, environment_id=?, asset_type=?,
+                    name=?, description=?, url=?, ip_address=?, protocol=?,
+                    port=?, username=?, password=?, alternate_ip=?, alternate_port=?,
+                    specifications=?, remarks=?, status=?, updated_by=?
+                    WHERE id=?";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iiissssssisssisssii",
+                $data['project_id'], $data['location_id'], $data['environment_id'],
+                $data['asset_type'], $data['name'], $data['description'], $data['url'],
+                $data['ip_address'], $data['protocol'], $data['port'], $data['username'],
+                $data['password'], $data['alternate_ip'], $data['alternate_port'],
+                $data['specifications'], $data['remarks'], $data['status'],
+                $_SESSION['user_id'], $id
+            );
+        } else {
+            // Create new asset
+            $sql = "INSERT INTO assets (
+                    project_id, location_id, environment_id, asset_type,
+                    name, description, url, ip_address, protocol,
+                    port, username, password, alternate_ip, alternate_port,
+                    specifications, remarks, status, created_by, updated_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iiissssssisssisssii",
+                $data['project_id'], $data['location_id'], $data['environment_id'],
+                $data['asset_type'], $data['name'], $data['description'], $data['url'],
+                $data['ip_address'], $data['protocol'], $data['port'], $data['username'],
+                $data['password'], $data['alternate_ip'], $data['alternate_port'],
+                $data['specifications'], $data['remarks'], $data['status'],
+                $_SESSION['user_id'], $_SESSION['user_id']
+            );
+        }
 
-    if ($stmt->execute()) {
-        // Log the change in asset_history
-        $asset_id = $id ?: $conn->insert_id;
-        $change_type = $id ? 'UPDATE' : 'CREATE';
-        $changes = json_encode($data);
-        
-        $history_sql = "INSERT INTO asset_history (asset_id, changed_by, change_type, changes) 
-                       VALUES (?, ?, ?, ?)";
-        $hist_stmt = $conn->prepare($history_sql);
-        $hist_stmt->bind_param("iiss", $asset_id, $_SESSION['user_id'], $change_type, $changes);
-        $hist_stmt->execute();
-
-        header("Location: index.php?success=1");
-        exit();
-    } else {
-        $error = "Error saving asset: " . $conn->error;
+        if ($stmt->execute()) {
+            // Log the change
+            $asset_id = $id ?: $conn->insert_id;
+            $change_type = $id ? 'UPDATE' : 'CREATE';
+            log_activity($_SESSION['user_id'], $change_type, json_encode($data));
+            
+            header("Location: index.php?success=1");
+            exit();
+        } else {
+            throw new Exception($stmt->error);
+        }
+    } catch (Exception $e) {
+        $error = "Error saving asset: " . $e->getMessage();
     }
 }
 ?>
@@ -138,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
             <div class="card-body">
                 <?php if (isset($error)): ?>
-                    <div class="alert alert-danger"><?php echo $error; ?></div>
+                    <?php echo display_error($error); ?>
                 <?php endif; ?>
 
                 <form method="post" class="needs-validation" novalidate>
@@ -159,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label class="form-label">Asset Type*</label>
                                 <select name="asset_type" class="form-select" required>
                                     <option value="">Select Type</option>
-                                    <?php foreach ($asset_types as $type => $description): ?>
+                                    <?php foreach (ASSET_TYPES as $type => $description): ?>
                                         <option value="<?php echo $type; ?>" 
                                                 <?php echo ($asset && $asset['asset_type'] == $type) ? 'selected' : ''; ?>
                                                 title="<?php echo $description; ?>">
@@ -181,12 +166,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label class="form-label">Project*</label>
                                 <select name="project_id" class="form-select" required>
                                     <option value="">Select Project</option>
-                                    <?php while ($project = $projects->fetch_assoc()): ?>
-                                        <option value="<?php echo $project['id']; ?>"
-                                                <?php echo ($asset && $asset['project_id'] == $project['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($project['name']); ?>
+                                    <?php foreach ($projects as $p): ?>
+                                        <option value="<?php echo $p['id']; ?>"
+                                                <?php echo ($asset && $asset['project_id'] == $p['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($p['name']); ?>
                                         </option>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -195,12 +180,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label class="form-label">Location*</label>
                                 <select name="location_id" class="form-select" required>
                                     <option value="">Select Location</option>
-                                    <?php while ($location = $locations->fetch_assoc()): ?>
-                                        <option value="<?php echo $location['id']; ?>"
-                                                <?php echo ($asset && $asset['location_id'] == $location['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($location['name']); ?>
+                                    <?php foreach ($locations as $l): ?>
+                                        <option value="<?php echo $l['id']; ?>"
+                                                <?php echo ($asset && $asset['location_id'] == $l['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($l['name']); ?>
                                         </option>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -209,12 +194,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label class="form-label">Environment*</label>
                                 <select name="environment_id" class="form-select" required>
                                     <option value="">Select Environment</option>
-                                    <?php while ($env = $environments->fetch_assoc()): ?>
-                                        <option value="<?php echo $env['id']; ?>"
-                                                <?php echo ($asset && $asset['environment_id'] == $env['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($env['name']); ?>
+                                    <?php foreach ($environments as $e): ?>
+                                        <option value="<?php echo $e['id']; ?>"
+                                                <?php echo ($asset && $asset['environment_id'] == $e['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($e['name']); ?>
                                         </option>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -325,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label class="form-label">Status*</label>
                                 <select name="status" class="form-select" required>
                                     <option value="">Select Status</option>
-                                    <?php foreach ($status_options as $status => $description): ?>
+                                    <?php foreach (STATUS_OPTIONS as $status => $description): ?>
                                         <option value="<?php echo $status; ?>"
                                                 <?php echo ($asset && $asset['status'] == $status) ? 'selected' : ''; ?>
                                                 title="<?php echo $description; ?>">
@@ -345,6 +330,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <a href="index.php" class="btn btn-secondary">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
+                            <?php if ($id): ?>
+                            <a href="asset_delete.php?id=<?php echo $id; ?>" 
+                               class="btn btn-danger float-end"
+                               onclick="return confirm('Are you sure you want to delete this asset?')">
+                                <i class="bi bi-trash"></i> Delete Asset
+                            </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </form>
@@ -371,6 +363,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }, false)
                 })
         })()
+
+        // IP Address validation
+        document.querySelectorAll('input[name="ip_address"], input[name="alternate_ip"]').forEach(function(input) {
+            input.addEventListener('input', function() {
+                let value = this.value;
+                if (value && !isValidIP(value)) {
+                    this.setCustomValidity('Please enter a valid IP address');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        });
+
+        function isValidIP(ip) {
+            // Simple IP validation - can be enhanced based on requirements
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ip)) return false;
+            const parts = ip.split('.');
+            return parts.every(part => parseInt(part) >= 0 && parseInt(part) <= 255);
+        }
+
+        // Port validation
+        document.querySelectorAll('input[name="port"], input[name="alternate_port"]').forEach(function(input) {
+            input.addEventListener('input', function() {
+                let value = parseInt(this.value);
+                if (value && (value < 1 || value > 65535)) {
+                    this.setCustomValidity('Port must be between 1 and 65535');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        });
     </script>
 </body>
 </html>
