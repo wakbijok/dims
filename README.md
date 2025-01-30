@@ -24,7 +24,13 @@ A web-based system for managing data center assets across multiple locations.
 1. Clone the repository:
 ```bash
 git clone https://github.com/wakbijok/dims.git
-cd dims/install
+cd dims
+
+Edit `config.php` to update:
+- Database connection settings
+- Site name and URL
+- Timezone settings
+- Other system configurations
 ```
 
 2. Make the installation script executable:
@@ -72,14 +78,6 @@ dims/
 ├── login.php         # Login page
 └── logout.php        # Logout handler
 ```
-
-## Configuration
-
-Edit `config.php` to update:
-- Database connection settings
-- Site name and URL
-- Timezone settings
-- Other system configurations
 
 ## Security Considerations
 
