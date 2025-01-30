@@ -24,7 +24,7 @@ A web-based system for managing data center assets across multiple locations.
 1. Clone the repository:
 ```bash
 git clone https://github.com/wakbijok/dims.git
-cd dims
+cd dims/install
 ```
 
 2. Make the installation script executable:
