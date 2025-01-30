@@ -25,30 +25,30 @@ A web-based system for managing data center assets across multiple locations.
 ```bash
 git clone https://github.com/wakbijok/dims.git
 cd dims
+```
 
 Edit `config.php` to update:
 - Database connection settings
 - Site name and URL
 - Timezone settings
 - Other system configurations
-```
 
 2. Make the installation script executable:
 ```bash
-chmod +x install.sh
+chmod +x install/install.sh
 ```
 
 3. Run the installation script:
 ```bash
-sudo ./install.sh
+sudo ./install/install.sh
 ```
 
-4. Update your hosts file or DNS settings to point to your server:
+4. Update your hosts file or DNS settings to point to your server. Example:
 ```bash
 sudo echo "127.0.0.1 inventory.local" >> /etc/hosts
 ```
 
-5. Access the system through your web browser:
+5. Access the system through your web browser. Example:
 ```
 http://inventory.local
 ```
