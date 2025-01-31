@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $result = $stmt->get_result();
             
             if ($user = $result->fetch_assoc()) {
-                if (verify_password($password, $user['password'])) {
+                if ($password == $user['password']) {
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];

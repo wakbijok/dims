@@ -78,7 +78,7 @@ CREATE TABLE asset_history (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (username, password, is_admin) 
-VALUES ('admin', '$2y$10$dxeDWcqpvydxz0qCw5YZm.AkbzFGW8.PFcD8RnbzRXhGc7hRHHcFO', TRUE);
+VALUES ('admin', 'admin123', TRUE);
 
 -- Insert default environments
 INSERT INTO environments (name, description) VALUES 
