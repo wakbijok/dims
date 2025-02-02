@@ -92,4 +92,4 @@ dims/
 5. Open a Pull Request
 
 ## License
-
+This system is open-source and provided "as is" without warranty of any kind. I'm just doing this for personal and internal use
