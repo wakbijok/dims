@@ -3,25 +3,16 @@
 # Database Configuration
 DB_HOST=${1:-"192.168.0.30"}    # Database host
 DB_PORT=${2:-"3306"}            # Database port
-DB_ROOT_PASSWORD=${3:-"rootpass"}  # Root password for database access
+DB_USER=${3:-"admin"}           # Admin username
 DB_NAME=${4:-"dims_db"}         # Database name
-DB_USER=${5:-"dims_user"}       # Database user
-DB_PASSWORD=${6:-"dims_password"} # Database user password
+DB_PASSWORD=${5:-"admin_password"} # Admin password
 
 # Export variables for docker-compose
 export DB_HOST DB_USER DB_PASSWORD DB_NAME
 
-# Function to create database and user
+# Function to create database and import schema
 create_database() {
-    echo "Creating database and user..."
-    
-    # SQL commands
-    SQL_COMMANDS="
-    CREATE DATABASE IF NOT EXISTS ${DB_NAME};
-    CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-    GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
-    FLUSH PRIVILEGES;
-    "
+    echo "Setting up database..."
     
     # Import schema
     SCHEMA_FILE="database/schema.sql"
@@ -32,11 +23,27 @@ create_database() {
         apt-get update && apt-get install -y default-mysql-client
     fi
     
-    # Create database and user
-    echo "$SQL_COMMANDS" | mysql -h"${DB_HOST}" -P"${DB_PORT}" -uroot -p"${DB_ROOT_PASSWORD}"
+    # Create database
+    echo "Creating database..."
+    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
     
-    # Import schema
-    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$SCHEMA_FILE"
+    if [ $? -eq 0 ]; then
+        echo "Database created successfully."
+        
+        # Import schema
+        echo "Importing schema..."
+        mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$SCHEMA_FILE"
+        
+        if [ $? -eq 0 ]; then
+            echo "Schema imported successfully."
+        else
+            echo "Error importing schema."
+            exit 1
+        fi
+    else
+        echo "Error creating database."
+        exit 1
+    fi
 }
 
 # Check if Docker is installed
