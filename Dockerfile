@@ -28,4 +28,4 @@ RUN chown -R www-data:www-data /var/www/html
 EXPOSE 80
 
 # Start Apache in foreground
-CMD ["apache2-foreground"]
+CMD apachectl -D FOREGROUND
