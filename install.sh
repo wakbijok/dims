@@ -1,27 +1,72 @@
 #!/bin/bash
 
-# Update system & install dependencies
-sudo apt update
-sudo apt install -y git apache2 php libapache2-mod-php php-mysql php-curl php-json php-cgi
+# Database Configuration
+DB_HOST=${1:-"192.168.0.30"}    # Database host
+DB_PORT=${2:-"3306"}            # Database port
+DB_ROOT_PASSWORD=${3:-"rootpass"}  # Root password for database access
+DB_NAME=${4:-"dims_db"}         # Database name
+DB_USER=${5:-"dims_user"}       # Database user
+DB_PASSWORD=${6:-"dims_password"} # Database user password
 
-# Enable Apache modules
-sudo a2enmod rewrite actions cgi  
+# Export variables for docker-compose
+export DB_HOST DB_USER DB_PASSWORD DB_NAME
 
-# Restart Apache 
-sudo service apache2 restart
+# Function to create database and user
+create_database() {
+    echo "Creating database and user..."
+    
+    # SQL commands
+    SQL_COMMANDS="
+    CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+    CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+    GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
+    FLUSH PRIVILEGES;
+    "
+    
+    # Import schema
+    SCHEMA_FILE="database/schema.sql"
+    
+    # Check if mysql client is installed
+    if ! command -v mysql &> /dev/null; then
+        echo "MySQL client not found. Installing..."
+        apt-get update && apt-get install -y default-mysql-client
+    fi
+    
+    # Create database and user
+    echo "$SQL_COMMANDS" | mysql -h"${DB_HOST}" -P"${DB_PORT}" -uroot -p"${DB_ROOT_PASSWORD}"
+    
+    # Import schema
+    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$SCHEMA_FILE"
+}
 
-# Clone repo
-git clone https://github.com/wakbijok/dims.git
-sudo mv dims /var/www/html/
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "Docker not found. Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    sudo usermod -aG docker $USER
+    rm get-docker.sh
+fi
 
-# Copy files
-sudo cp inventory_api.php /var/www/html/dims/
-sudo cp index.html /var/www/html/dims/
-sudo cp script.js /var/www/html/dims/  
-sudo cp styles.css /var/www/html/dims/
+# Check if Docker Compose is installed
+if ! command -v docker-compose &> /dev/null; then
+    echo "Docker Compose not found. Installing Docker Compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+fi
 
-# Set permissions
-sudo chown -R www-data:www-data /var/www/html/dims
-sudo chmod -R 775 /var/www/html/dims
+# Create necessary directories
+mkdir -p src/
+mkdir -p src/config
+mkdir -p src/assets
+mkdir -p src/includes
+mkdir -p database
 
-echo "Inventory system installed. Access at http://your_server_ip/dims"
+# Build and start containers
+docker-compose up -d --build
+
+# Create database and import schema
+create_database
+
+echo "Installation completed successfully!"
+echo "You can access the application at http://localhost:8080"
