@@ -36,19 +36,44 @@ cd dims
    - Default configuration points to `192.168.0.30` for the database
    - To use different database settings, modify the parameters when running install.sh
 
-3. Run the installation script:
+3. Run the installation script (for initial setup):
 ```bash
 chmod +x install.sh
-./install.sh [DB_HOST] [DB_PORT] [DB_ROOT_PASSWORD] [DB_NAME] [DB_USER] [DB_PASSWORD]
+./install.sh [DB_HOST] [DB_PORT] [DB_USER] [DB_NAME] [DB_PASSWORD]
 ```
 
 Example with default values:
 ```bash
-./install.sh "192.168.0.30" "3306" "rootpass" "dims_db" "dims_user" "dims_password"
+./install.sh "192.168.0.30" "3306" "admin" "dims_db" "admin_password"
 ```
 
 4. Access the application:
    - Open your browser and navigate to `http://localhost:8080`
+
+## Deployment Options
+
+### For Code Updates Only (Preserves Database)
+Use this when you only need to redeploy the application without resetting the database:
+```bash
+./deploy-app.sh
+```
+
+### For Database Updates Only
+Use this when you need to update the database schema or create new tables:
+```bash
+./deploy-db.sh [DB_HOST] [DB_PORT] [DB_USER] [DB_NAME] [DB_PASSWORD]
+```
+
+Example:
+```bash
+./deploy-db.sh "192.168.0.30" "3306" "admin" "dims_db" "admin_password"
+```
+
+### For Full Installation (Initial Setup)
+Use this for fresh installations that setup both the application and database:
+```bash
+./install.sh [DB_HOST] [DB_PORT] [DB_USER] [DB_NAME] [DB_PASSWORD]
+```
 
 ## Directory Structure
 
@@ -62,7 +87,9 @@ dims/
 ├── database/              # Database schema
 ├── docker-compose.yml     # Docker configuration
 ├── Dockerfile            # Docker build file
-├── install.sh            # Installation script
+├── install.sh            # Full installation script (initial setup)
+├── deploy-app.sh         # App-only deployment (preserves database)
+├── deploy-db.sh          # Database deployment only
 └── README.md             # This file
 ```
 
