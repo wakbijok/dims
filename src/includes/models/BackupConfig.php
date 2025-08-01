@@ -89,4 +89,51 @@ class BackupConfig extends BaseModel {
         $stmt->execute();
         return $stmt;
     }
+    
+    public function searchWithFilters($params) {
+        $conditions = [];
+        $values = [];
+        
+        $query = "SELECT bc.*, 
+                        s.hostname as server_hostname,
+                        s.ip_address as server_ip
+                 FROM " . $this->table_name . " bc
+                 LEFT JOIN servers s ON bc.server_id = s.id";
+        
+        // Add search condition
+        if (!empty($params['search'])) {
+            $conditions[] = "(s.hostname LIKE ? OR s.ip_address LIKE ? OR bc.backup_type LIKE ? OR bc.schedule LIKE ? OR bc.retention_period LIKE ?)";
+            $searchTerm = "%{$params['search']}%";
+            $values = array_merge($values, [$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        }
+        
+        // Add server filter
+        if (!empty($params['server_id'])) {
+            $conditions[] = "bc.server_id = ?";
+            $values[] = $params['server_id'];
+        }
+        
+        // Add backup type filter
+        if (!empty($params['backup_type'])) {
+            $conditions[] = "bc.backup_type = ?";
+            $values[] = $params['backup_type'];
+        }
+        
+        // Add WHERE clause if we have conditions
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+        
+        $query .= " ORDER BY bc.id ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters
+        for ($i = 0; $i < count($values); $i++) {
+            $stmt->bindParam($i + 1, $values[$i]);
+        }
+        
+        $stmt->execute();
+        return $stmt;
+    }
 }

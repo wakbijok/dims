@@ -94,4 +94,25 @@ class HardwareSpec extends BaseModel {
         $stmt->execute();
         return $stmt;
     }
+    
+    public function search($keyword) {
+        $query = "SELECT hs.*, 
+                        s.hostname as server_hostname,
+                        s.ip_address as server_ip
+                 FROM " . $this->table_name . " hs
+                 LEFT JOIN servers s ON hs.server_id = s.id
+                 WHERE s.hostname LIKE ? OR s.ip_address LIKE ? OR hs.cpu LIKE ? OR hs.memory LIKE ? OR hs.storage LIKE ? OR hs.serial_number LIKE ?
+                 ORDER BY hs.id ASC";
+        
+        $keyword = "%{$keyword}%";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $keyword);
+        $stmt->bindParam(2, $keyword);
+        $stmt->bindParam(3, $keyword);
+        $stmt->bindParam(4, $keyword);
+        $stmt->bindParam(5, $keyword);
+        $stmt->bindParam(6, $keyword);
+        $stmt->execute();
+        return $stmt;
+    }
 }

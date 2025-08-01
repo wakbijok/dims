@@ -14,10 +14,12 @@ class BackupConfigApi extends BaseApi {
     
     protected function getAll() {
         try {
-            if (isset($_GET['overdue'])) {
+            $params = $_GET;
+            
+            if (isset($params['overdue'])) {
                 $result = $this->model->getOverdueBackups();
-            } else if (isset($_GET['server_id'])) {
-                $result = $this->model->getByServerId($_GET['server_id']);
+            } elseif (isset($params['search']) || isset($params['backup_type']) || isset($params['server_id'])) {
+                $result = $this->model->searchWithFilters($params);
             } else {
                 $result = $this->model->getAllWithServerDetails();
             }

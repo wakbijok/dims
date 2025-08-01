@@ -16,6 +16,8 @@ class HardwareSpecApi extends BaseApi {
         try {
             if (isset($_GET['server_id'])) {
                 $result = $this->model->getByServerId($_GET['server_id']);
+            } elseif (isset($_GET['search'])) {
+                $result = $this->model->search($_GET['search']);
             } else {
                 $result = $this->model->getAllWithServerDetails();
             }
