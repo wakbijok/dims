@@ -70,6 +70,22 @@ create_database() {
                 echo "Migration completed."
             fi
             
+            # Run migration for hardware fields if migration file exists
+            HARDWARE_MIGRATION_FILE="migrate-hardware-fields.sql"
+            if [ -f "$HARDWARE_MIGRATION_FILE" ]; then
+                echo "Running hardware fields migration..."
+                mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$HARDWARE_MIGRATION_FILE" 2>&1
+                echo "Hardware migration completed."
+            fi
+            
+            # Cleanup old hardware table if cleanup file exists
+            CLEANUP_FILE="cleanup-hardware-table.sql"
+            if [ -f "$CLEANUP_FILE" ]; then
+                echo "Running hardware table cleanup..."
+                mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$CLEANUP_FILE" 2>&1
+                echo "Hardware table cleanup completed."
+            fi
+            
             # Verify tables were created
             echo "Verifying tables..."
             mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SHOW TABLES;"

@@ -14,8 +14,12 @@ class ServerApi extends BaseApi {
     
     protected function getAll() {
         try {
-            if (isset($_GET['search'])) {
-                $result = $this->model->search($_GET['search']);
+            $searchTerm = $_GET['search'] ?? null;
+            $locationId = $_GET['location_id'] ?? null;
+            $environmentId = $_GET['environment_id'] ?? null;
+            
+            if ($searchTerm || $locationId || $environmentId) {
+                $result = $this->model->searchAndFilter($searchTerm, $locationId, $environmentId);
             } else {
                 $result = $this->model->getAllWithDetails();
             }
@@ -62,7 +66,14 @@ class ServerApi extends BaseApi {
     protected function update($id) {
         try {
             $data = $this->getJSONBody();
-            $this->validateRequired($data, ['location_id', 'environment_id']);
+            
+            // For status-only updates (bulk operations), don't require all fields
+            $isStatusOnlyUpdate = isset($data['status']) && count($data) <= 3 && 
+                                 (!isset($data['location_id']) || !isset($data['environment_id']));
+            
+            if (!$isStatusOnlyUpdate) {
+                $this->validateRequired($data, ['location_id', 'environment_id']);
+            }
             
             if ($this->model->update($id, $data)) {
                 $this->sendResponse(['message' => 'Server updated successfully']);

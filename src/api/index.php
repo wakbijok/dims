@@ -52,10 +52,7 @@ try {
             $controller = new ServiceApi($db, $_SERVER['REQUEST_METHOD'], $id);
             break;
             
-        case 'hardware':
-            require_once '../includes/api/HardwareSpecApi.php';
-            $controller = new HardwareSpecApi($db, $_SERVER['REQUEST_METHOD'], $id);
-            break;
+        // hardware endpoint removed - hardware specs now integrated into servers
             
         case 'backups':
             require_once '../includes/api/BackupConfigApi.php';

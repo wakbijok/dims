@@ -24,13 +24,23 @@ CREATE TABLE IF NOT EXISTS servers (
     location_id INT,
     environment_id INT,
     hostname VARCHAR(255),
-    ip_address VARCHAR(255) UNIQUE NOT NULL,
+    ip_address VARCHAR(255) NOT NULL,
     server_type ENUM('VM', 'Physical') DEFAULT 'VM',
+    status ENUM('Active', 'Decommissioned') DEFAULT 'Active',
+    decommission_date DATE NULL,
     description TEXT,
+    -- Hardware specifications (for Physical servers)
+    cpu_type VARCHAR(100),
+    cpu_cores INT,
+    memory_gb INT,
+    storage_details TEXT,
+    serial_number VARCHAR(100) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (location_id) REFERENCES locations(id),
-    FOREIGN KEY (environment_id) REFERENCES environments(id)
+    FOREIGN KEY (environment_id) REFERENCES environments(id),
+    -- Unique IP constraint only for Active servers
+    UNIQUE KEY unique_active_ip (ip_address, status)
 );
 
 -- Create services table
@@ -48,18 +58,7 @@ CREATE TABLE IF NOT EXISTS services (
     FOREIGN KEY (server_id) REFERENCES servers(id)
 );
 
--- Create hardware_specs table
-CREATE TABLE IF NOT EXISTS hardware_specs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    server_id INT,
-    cpu VARCHAR(100),
-    memory VARCHAR(50),
-    storage VARCHAR(100),
-    serial_number VARCHAR(100) UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (server_id) REFERENCES servers(id)
-);
+-- Hardware specs table removed - now integrated into servers table
 
 -- Create backup_configs table
 CREATE TABLE IF NOT EXISTS backup_configs (

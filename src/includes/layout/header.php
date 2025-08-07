@@ -15,6 +15,7 @@ if (!isset($content)) {
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/assets/css/style.css" rel="stylesheet">
 
     <!-- JavaScript -->
@@ -37,9 +38,6 @@ if (!isset($content)) {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/services">Services</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/hardware">Hardware</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/backups">Backups</a>
