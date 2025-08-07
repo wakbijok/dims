@@ -32,11 +32,24 @@ const hardwareModule = {
             const serverSelect = document.getElementById('server_id');
             const serverFilter = document.getElementById('serverFilter');
             
-            response.data.forEach(server => {
-                const option = new Option(`${server.hostname} (${server.ip_address || 'No IP'})`, server.id);
-                serverSelect.add(option.cloneNode(true));
-                serverFilter.add(option.cloneNode(true));
-            });
+            // Filter to only show Physical servers
+            const physicalServers = response.data.filter(server => server.server_type === 'Physical');
+            
+            if (physicalServers.length === 0) {
+                // Add a message if no physical servers exist
+                const noServersOption = new Option('No Physical servers found - add Physical servers first', '');
+                noServersOption.disabled = true;
+                serverSelect.add(noServersOption);
+            } else {
+                physicalServers.forEach(server => {
+                    const displayName = server.hostname ? 
+                        `${server.hostname} (${server.ip_address})` : 
+                        server.ip_address;
+                    const option = new Option(displayName, server.id);
+                    serverSelect.add(option.cloneNode(true));
+                    serverFilter.add(option.cloneNode(true));
+                });
+            }
         } catch (error) {
             utils.showError('Failed to load servers: ' + error);
         }

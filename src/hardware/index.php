@@ -8,9 +8,12 @@ ob_start();
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Hardware Specifications</h5>
-        <button type="button" class="btn btn-primary" onclick="hardwareModule.showAddModal()">
-            Add Hardware Spec
-        </button>
+        <div>
+            <small class="text-muted me-3">Physical servers only</small>
+            <button type="button" class="btn btn-primary" onclick="hardwareModule.showAddModal()">
+                Add Hardware Spec
+            </button>
+        </div>
     </div>
     <div class="card-body">
         <div class="row mb-3">
@@ -57,10 +60,11 @@ ob_start();
                     <input type="hidden" id="hardwareId" name="id">
                     
                     <div class="mb-3">
-                        <label for="server_id" class="form-label required">Server</label>
+                        <label for="server_id" class="form-label required">Physical Server</label>
                         <select class="form-select" id="server_id" name="server_id" required>
-                            <option value="">Select Server</option>
+                            <option value="">Select Physical Server</option>
                         </select>
+                        <div class="form-text">Only Physical servers are available for hardware specs</div>
                     </div>
                     
                     <div class="mb-3">

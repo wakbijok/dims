@@ -4,37 +4,59 @@ const serverModule = {
     modal: null,
     currentId: null,
     
-    init: async function() {
+    init: function() {
+        // Check if required elements exist
+        const serverModal = document.getElementById('serverModal');
+        const serverTableBody = document.getElementById('serverTableBody');
+        
+        if (!serverModal || !serverTableBody) {
+            console.error('Required DOM elements not found for server module');
+            return;
+        }
+        
         // Initialize Bootstrap modal
-        this.modal = new bootstrap.Modal(document.getElementById('serverModal'));
+        this.modal = new bootstrap.Modal(serverModal);
         
         // Initialize event listeners
         this.initializeEventListeners();
         
-        // Load initial data
-        await this.loadFilters();
-        await this.loadServers();
+        // Load initial data (don't await, let them run independently)
+        this.loadFilters();
+        this.loadServers();
     },
     
     initializeEventListeners: function() {
         // Search input
-        document.getElementById('serverSearch').addEventListener('input', (e) => {
-            this.loadServers();
-        });
+        const serverSearch = document.getElementById('serverSearch');
+        if (serverSearch) {
+            serverSearch.addEventListener('input', (e) => {
+                this.loadServers();
+            });
+        }
         
         // Filters
-        document.getElementById('locationFilter').addEventListener('change', () => {
-            this.loadServers();
-        });
-        document.getElementById('environmentFilter').addEventListener('change', () => {
-            this.loadServers();
-        });
+        const locationFilter = document.getElementById('locationFilter');
+        if (locationFilter) {
+            locationFilter.addEventListener('change', () => {
+                this.loadServers();
+            });
+        }
+        
+        const environmentFilter = document.getElementById('environmentFilter');
+        if (environmentFilter) {
+            environmentFilter.addEventListener('change', () => {
+                this.loadServers();
+            });
+        }
         
         // Form submission
-        document.getElementById('serverForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveServer();
-        });
+        const serverForm = document.getElementById('serverForm');
+        if (serverForm) {
+            serverForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveServer();
+            });
+        }
     },
     
     loadFilters: async function() {
@@ -44,20 +66,34 @@ const serverModule = {
             const locationSelect = document.getElementById('location_id');
             const locationFilter = document.getElementById('locationFilter');
             
-            locations.data.forEach(location => {
-                locationSelect.add(new Option(location.name, location.id));
-                locationFilter.add(new Option(location.name, location.id));
-            });
+            if (locationSelect && locations.data) {
+                locations.data.forEach(location => {
+                    locationSelect.add(new Option(location.name, location.id));
+                });
+            }
+            
+            if (locationFilter && locations.data) {
+                locations.data.forEach(location => {
+                    locationFilter.add(new Option(location.name, location.id));
+                });
+            }
             
             // Load environments
             const environments = await utils.api.getAll('environments');
             const environmentSelect = document.getElementById('environment_id');
             const environmentFilter = document.getElementById('environmentFilter');
             
-            environments.data.forEach(env => {
-                environmentSelect.add(new Option(env.name, env.id));
-                environmentFilter.add(new Option(env.name, env.id));
-            });
+            if (environmentSelect && environments.data) {
+                environments.data.forEach(env => {
+                    environmentSelect.add(new Option(env.name, env.id));
+                });
+            }
+            
+            if (environmentFilter && environments.data) {
+                environments.data.forEach(env => {
+                    environmentFilter.add(new Option(env.name, env.id));
+                });
+            }
         } catch (error) {
             utils.showError('Failed to load filters: ' + error);
         }
@@ -65,9 +101,13 @@ const serverModule = {
     
     loadServers: async function() {
         try {
-            const searchTerm = document.getElementById('serverSearch').value;
-            const locationId = document.getElementById('locationFilter').value;
-            const environmentId = document.getElementById('environmentFilter').value;
+            const searchInput = document.getElementById('serverSearch');
+            const locationFilter = document.getElementById('locationFilter');
+            const environmentFilter = document.getElementById('environmentFilter');
+            
+            const searchTerm = searchInput ? searchInput.value : '';
+            const locationId = locationFilter ? locationFilter.value : '';
+            const environmentId = environmentFilter ? environmentFilter.value : '';
             
             let params = {};
             if (searchTerm) params.search = searchTerm;
@@ -77,13 +117,22 @@ const serverModule = {
             const response = await utils.api.getAll('servers', params);
             this.renderServers(response.data);
         } catch (error) {
+            console.error('Load servers error:', error);
             utils.showError('Failed to load servers: ' + error);
         }
     },
     
     renderServers: function(servers) {
         const tbody = document.getElementById('serverTableBody');
+        if (!tbody) {
+            console.error('serverTableBody element not found');
+            return;
+        }
         tbody.innerHTML = '';
+        
+        if (!servers || !Array.isArray(servers)) {
+            return;
+        }
         
         servers.forEach(server => {
             const tr = document.createElement('tr');

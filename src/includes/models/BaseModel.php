@@ -1,6 +1,8 @@
 <?php
 // src/includes/models/BaseModel.php
 
+require_once __DIR__ . '/Logger.php';
+
 abstract class BaseModel {
     protected $conn;
     protected $table_name;

@@ -21,6 +21,9 @@ COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy .htaccess file to ensure proper URL rewriting
+COPY src/.htaccess /var/www/html/.htaccess
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 

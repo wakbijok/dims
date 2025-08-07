@@ -62,6 +62,14 @@ create_database() {
         if [ $? -eq 0 ]; then
             echo "Schema imported successfully."
             
+            # Run migration for server_type column if migration file exists
+            MIGRATION_FILE="migrate-server-type.sql"
+            if [ -f "$MIGRATION_FILE" ]; then
+                echo "Running server_type migration..."
+                mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$MIGRATION_FILE" 2>&1
+                echo "Migration completed."
+            fi
+            
             # Verify tables were created
             echo "Verifying tables..."
             mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SHOW TABLES;"

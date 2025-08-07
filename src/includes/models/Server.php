@@ -15,8 +15,8 @@ class Server extends BaseModel {
         }
         
         $query = "INSERT INTO " . $this->table_name . "
-                 (location_id, environment_id, hostname, ip_address, description)
-                 VALUES (?, ?, ?, ?, ?)";
+                 (location_id, environment_id, hostname, ip_address, server_type, description)
+                 VALUES (?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->conn->prepare($query);
         
@@ -25,13 +25,15 @@ class Server extends BaseModel {
         $environment_id = htmlspecialchars(strip_tags($data['environment_id']));
         $hostname = htmlspecialchars(strip_tags($data['hostname']));
         $ip_address = !empty($data['ip_address']) ? htmlspecialchars(strip_tags($data['ip_address'])) : null;
+        $server_type = !empty($data['server_type']) ? htmlspecialchars(strip_tags($data['server_type'])) : 'VM';
         $description = htmlspecialchars(strip_tags($data['description']));
         
         $stmt->bindParam(1, $location_id);
         $stmt->bindParam(2, $environment_id);
         $stmt->bindParam(3, $hostname);
         $stmt->bindParam(4, $ip_address);
-        $stmt->bindParam(5, $description);
+        $stmt->bindParam(5, $server_type);
+        $stmt->bindParam(6, $description);
         
         if($stmt->execute()) {
             return $this->conn->lastInsertId();
@@ -52,6 +54,7 @@ class Server extends BaseModel {
                      environment_id = ?,
                      hostname = ?,
                      ip_address = ?,
+                     server_type = ?,
                      description = ?
                  WHERE id = ?";
         
@@ -62,14 +65,16 @@ class Server extends BaseModel {
         $environment_id = htmlspecialchars(strip_tags($data['environment_id']));
         $hostname = htmlspecialchars(strip_tags($data['hostname']));
         $ip_address = !empty($data['ip_address']) ? htmlspecialchars(strip_tags($data['ip_address'])) : null;
+        $server_type = !empty($data['server_type']) ? htmlspecialchars(strip_tags($data['server_type'])) : 'VM';
         $description = htmlspecialchars(strip_tags($data['description']));
         
         $stmt->bindParam(1, $location_id);
         $stmt->bindParam(2, $environment_id);
         $stmt->bindParam(3, $hostname);
         $stmt->bindParam(4, $ip_address);
-        $stmt->bindParam(5, $description);
-        $stmt->bindParam(6, $id);
+        $stmt->bindParam(5, $server_type);
+        $stmt->bindParam(6, $description);
+        $stmt->bindParam(7, $id);
         
         return $stmt->execute();
     }

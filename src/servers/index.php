@@ -36,6 +36,7 @@ ob_start();
                     <tr>
                         <th>Hostname</th>
                         <th>IP Address</th>
+                        <th>Type</th>
                         <th>Location</th>
                         <th>Environment</th>
                         <th>Description</th>
@@ -63,14 +64,25 @@ ob_start();
                     <input type="hidden" id="serverId" name="id">
                     
                     <div class="mb-3">
-                        <label for="hostname" class="form-label required">Hostname</label>
-                        <input type="text" class="form-control" id="hostname" name="hostname" required>
+                        <label for="hostname" class="form-label">Hostname</label>
+                        <input type="text" class="form-control" id="hostname" name="hostname">
+                        <div class="form-text">Optional - can be same for multiple servers</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="ip_address" class="form-label">IP Address</label>
-                        <input type="text" class="form-control" id="ip_address" name="ip_address" 
+                        <label for="ip_address" class="form-label required">IP Address</label>
+                        <input type="text" class="form-control" id="ip_address" name="ip_address" required
                                pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$">
+                        <div class="form-text">Required and must be unique</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="server_type" class="form-label required">Server Type</label>
+                        <select class="form-select" id="server_type" name="server_type" required>
+                            <option value="VM" selected>VM</option>
+                            <option value="Physical">Physical</option>
+                        </select>
+                        <div class="form-text">Physical servers will also appear in Hardware page</div>
                     </div>
                     
                     <div class="mb-3">
@@ -102,7 +114,7 @@ ob_start();
 </div>
 
 <!-- Include server module JavaScript -->
-<script src="/assets/js/modules/server.js"></script>
+<script src="/assets/js/modules/server-simple.js"></script>
 
 <?php
 $content = ob_get_clean();
