@@ -3,12 +3,18 @@
 # Database deployment script
 # This script handles database setup and schema updates
 
-# Database Configuration
-DB_HOST=${1:-"192.168.0.30"}    # Database host
-DB_PORT=${2:-"3306"}            # Database port
-DB_USER=${3:-"admin"}           # Admin username
-DB_NAME=${4:-"dims_db"}         # Database name
-DB_PASSWORD=${5:-"admin_password"} # Admin password
+# Load environment variables from .env file if it exists
+if [ -f .env ]; then
+    export $(cat .env | xargs)
+    echo "Loaded environment variables from .env"
+fi
+
+# Database Configuration (command line arguments override .env values)
+DB_HOST=${1:-${DB_HOST:-"192.168.0.30"}}    # Database host
+DB_PORT=${2:-${DB_PORT:-"3306"}}            # Database port
+DB_USER=${3:-${DB_USER:-"admin"}}           # Admin username
+DB_NAME=${4:-${DB_NAME:-"dims_db"}}         # Database name
+DB_PASSWORD=${5:-${DB_PASSWORD}}            # Admin password
 
 # Export variables for docker-compose
 export DB_HOST DB_USER DB_PASSWORD DB_NAME
@@ -22,29 +28,53 @@ create_database() {
     
     # Check if mysql client is installed
     if ! command -v mysql &> /dev/null; then
-        echo "MySQL client not found. Installing..."
-        apt-get update && apt-get install -y default-mysql-client
+        echo "MySQL client not found. Please install MySQL client:"
+        echo "Ubuntu/Debian: sudo apt-get install mysql-client"
+        echo "macOS: brew install mysql"
+        echo "CentOS/RHEL: sudo yum install mysql"
+        exit 1
+    fi
+    
+    # Test database connection first
+    echo "Testing database connection..."
+    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" -e "SELECT 1;" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Database connection failed. Please check:"
+        echo "- Host: ${DB_HOST}"
+        echo "- Port: ${DB_PORT}"
+        echo "- User: ${DB_USER}"
+        echo "- Password: [hidden]"
+        echo "- Database server is running and accessible"
+        exit 1
     fi
     
     # Create database
-    echo "Creating database..."
-    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
+    echo "Creating database ${DB_NAME}..."
+    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
     
     if [ $? -eq 0 ]; then
         echo "Database created successfully."
         
-        # Import schema
-        echo "Importing schema..."
-        mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$SCHEMA_FILE"
+        # Import schema with verbose output
+        echo "Importing schema from ${SCHEMA_FILE}..."
+        mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < "$SCHEMA_FILE" 2>&1
         
         if [ $? -eq 0 ]; then
             echo "Schema imported successfully."
+            
+            # Verify tables were created
+            echo "Verifying tables..."
+            mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SHOW TABLES;"
         else
-            echo "Error importing schema."
+            echo "Error importing schema. Check the SQL syntax in ${SCHEMA_FILE}"
             exit 1
         fi
     else
-        echo "Error creating database."
+        echo "Error creating database ${DB_NAME}."
+        echo "This might be due to:"
+        echo "- Insufficient privileges"
+        echo "- Database already exists"
+        echo "- Syntax error in database name"
         exit 1
     fi
 }

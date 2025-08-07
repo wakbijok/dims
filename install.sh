@@ -3,12 +3,18 @@
 # Full installation script (for initial setup)
 # This script handles both Docker setup and database deployment
 
-# Database Configuration
-DB_HOST=${1:-"192.168.0.30"}    # Database host
-DB_PORT=${2:-"3306"}            # Database port
-DB_USER=${3:-"admin"}           # Admin username
-DB_NAME=${4:-"dims_db"}         # Database name
-DB_PASSWORD=${5:-"admin_password"} # Admin password
+# Load environment variables from .env file if it exists
+if [ -f .env ]; then
+    export $(cat .env | xargs)
+    echo "Loaded environment variables from .env"
+fi
+
+# Database Configuration (command line arguments override .env values)
+DB_HOST=${1:-${DB_HOST:-"192.168.0.30"}}    # Database host
+DB_PORT=${2:-${DB_PORT:-"3306"}}            # Database port
+DB_USER=${3:-${DB_USER:-"admin"}}           # Admin username
+DB_NAME=${4:-${DB_NAME:-"dims_db"}}         # Database name
+DB_PASSWORD=${5:-${DB_PASSWORD}}            # Admin password
 
 # Export variables for docker-compose
 export DB_HOST DB_USER DB_PASSWORD DB_NAME

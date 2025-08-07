@@ -1,18 +1,22 @@
 <?php
 // src/includes/layout/header.php
-?>
+
+// Ensure content variable is defined
+if (!isset($content)) {
+    $content = "";
+} ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DIMS - Data Center Inventory Management System</title>
-    
+
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="/assets/css/style.css" rel="stylesheet">
-    
+
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
@@ -58,12 +62,12 @@
 
     <div class="container mt-4">
         <!-- Content will be injected here -->
-        <?php echo $content ?? ''; ?>
+        <?php echo $content ?? ""; ?>
     </div>
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">DIMS &copy; <?php echo date('Y'); ?></span>
+            <span class="text-muted">DIMS &copy; <?php echo date("Y"); ?></span>
         </div>
     </footer>
 </body>
