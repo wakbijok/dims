@@ -1,0 +1,23 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dims-web
+    volumes:
+      - ./src:/var/www/html
+    ports:
+      - "8080:80"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DB_HOST:-192.0.2.30}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-dims_db}
+    networks:
+      - dims-network
+
+networks:
+  dims-network:
+    driver: bridge
